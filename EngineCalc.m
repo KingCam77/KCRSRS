@@ -7,7 +7,6 @@ global AtmoProp;
 
 
 
-
 Lstar=0.9;       %Chamber Characteristic Length (m) between 0.76 and 1.02
 
 
@@ -150,7 +149,6 @@ IspT(x,:)=0;
 
 ind = FT < 0;
 FT(ind)=0;
-ind = IspT < 0;
 IspT(ind)=0;
 
 qfinal=qT;
@@ -159,10 +157,22 @@ qfinal(x,:)=0;
 Ffinal=CorFac.*FT;
 Ispfinal=CorFac.*IspT;
 
+
+
 if nargin == 7
-  n=1
+  n=1;
 end
-Engine(n).thrust=Ffinal;
-Engine(n).isp=Ispfinal;
-Engine(n).m_dot=qfinal;
+
+if Ffinal(100,13) == 0
+%%Vaccum Engine, use vaccum properties for asl
+Engine.thrust_asl(n)=Ffinal(100,20000);
+Engine.isp_vac(n)=Ispfinal(100,20000);
+Engine.isp_asl(n)=Ispfinal(100,20000);
+else
+Engine.thrust_asl(n)=Ffinal(100,13);
+Engine.isp_vac(n)=Ispfinal(100,20000);
+Engine.isp_asl(n)=Ispfinal(100,13);
+end
+
+Engine.m_dot(n)=qfinal(100);
 endfunction

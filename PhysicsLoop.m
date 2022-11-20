@@ -9,8 +9,8 @@ TokpelaInitializer;
 dt=1
 TimeEval=5000;
 
-Pv_bar=rocket.v_bar;
-Pr_bar=rocket.r_bar;
+Pv_bar=vehicle.state.v_bar;
+Pr_bar=vehicle.state.r_bar;
 x=1
 major_cycle=15;
 Pm=rocket.mass(1).Total;
@@ -22,7 +22,7 @@ valset=0;
 
 Deltav_bar_sensed=0;
 
-UPFG;
+[previous, guidance] = UPFG(vehicle)
 lc=0;
 test=2
 GuideCall=0;
@@ -63,25 +63,24 @@ else
 #  DyP(s,x)=0;
 end
 
-direct=i_bar_f;
+direct=guidance.i_bar_f;
 
 
 
-if Fuel(1)>0
-Pf_bar=2*rocket.engines(1).thrust(100,200)*unit(direct);
-Fuel(1)=Fuel(1)-rocket.engines(1).m_dot(100);
-Pm=Pm-rocket.engines(1).m_dot(100);
-if x<50
-Pf_bar=Pf_bar+10000000*unit(direct);
+if guidance.k=1
+Pf_bar=vehicle.engines.thrust_asl(2)*unit(direct);
+Pm=Pm-vehicle.engines.m_dot(2);
+if x<110
+Pf_bar=Pf_bar+2*rocket.engines.thrust_asl(1)*unit(direct);
 end
 elseif t_go_i(1) < 10 && Fuel(1)<=0 && Fuel(2)>0
 if valset == 0
 Pm=rocket.mass(2).Total;
 valset=1;
 end
-Fuel(2)=Fuel(2)-rocket.engines(2).m_dot(100);
-Pm=Pm-rocket.engines(2).m_dot(100);
-Pf_bar=rocket.engines(2).thrust(100,10000)*unit(direct)*0;
+Fuel(2)=Fuel(2)-rocket.engines.m_dot(3);
+Pm=Pm-vehicle.engines.m_dot(3);
+Pf_bar=vehicle.engines.thrust_asl(3)*unit(direct)*0;
 else
 Pf_bar=[0,0,0];
 end
@@ -110,7 +109,10 @@ if lc < major_cycle
 else
   data.Deltav_bar_sensed=Deltav_bar_sensed;
   Deltav_bar_sensed=0;
-  UPFG;
+  vehicle.state.r_bar=Pr_bar;
+  vehicle.state.v_bar=Pv_bar;
+  vehicle.data=data;
+  [previous, guidance] = UPFG(vehicle, previous)
   ++GuideCall;
   lc=0;
 end
@@ -121,13 +123,13 @@ end
 #end_try_catch
 end
 
-#x1=launchSite.r_bar(1);
-#y1=launchSite.r_bar(2);
-#z1=launchSite.r_bar(3);
+x1=target.r_bar_d(1);
+y1=target.r_bar_d(2);
+z1=target.r_bar_d(3);
 [a,b,c]=sphere(50);
 surf(a*r_E,b*r_E,c*r_E, 'FaceColor','texturemap','EdgeColor','none','Cdata',flipud(Background))
 hold on
-#plot3(x1,y1,z1,'ro')
+plot3(x1,y1,z1,'ro')
 plot3(Pr_x,Pr_y,Pr_z,'r-', 'LineWidth',2)
 hold off
 axis('equal')

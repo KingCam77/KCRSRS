@@ -16,7 +16,7 @@ Fuel1=220000;
 Fuel2=20000;
 
 %Payload Mass (kg)
-Payload=4000;
+Payload=100;
 
 %%Extra Mass Parameters
 %%Mass fraction of fuel that the tank weights
@@ -38,97 +38,65 @@ TankP2 = 0.04;
 
 %%Rocket Diameter
 DiaM=5;
-TankWallThickness=0.1;
-TankRatio=0.5;
 
 %%%Calculations
 
-LH2mass1=Fuel1/6;
-LOXmass1=Fuel1-LH2mass1;
-LOXvol1=LOXmass1/LOXdensity;
-LH2vol1=LH2mass1/LH2density;
-
-LH2mass2=Fuel2/6;
-LOXmass2=Fuel2-LH2mass2;
-LOXvol2=LOXmass2/LOXdensity;
-LH2vol2=LH2mass2/LH2density;
-
-TankR=DiaM/2-TankWallThickness;
-
-V=LH2vol1;
-tanks = TankCalc(V, TankR, TankRatio);
-
-V=LOXvol1;
-tanks = TankCalc(V, TankR, TankRatio, 2, tanks);
-
-V=LH2vol2;
-tanks = TankCalc(V, TankR, TankRatio, 3, tanks);
-
-V=LOXvol2;
-tanks = TankCalc(V, TankR, TankRatio, 4, tanks);
+Settings.TankWallThickness=0.1;
+Settings.TankRatio=0.5
+tanks = FuelCalc([Fuel1,Fuel2], [6,6], 'LOX/LH2', DiaM, Settings)
 
 %%Create Engines
-%First Stage Engine
-
-[engines]=EngineCalc(14600000,640,9000,6,25,70,0.95,1);
-%Second Stage Engine
-[engines]=EngineCalc(4700000,35,33500,6,25,60,0.925,2,engines);
-
-%%Mass Calculations
-mass = MassCalc([Fuel1, Fuel2], [2000, 1500], [0.05, 0.04], Payload);
-
-%%Stage creator
-
-global rocket
-
-rocket.s_AElower=[1,0];
-rocket.s_AEupper=[0,1];
 
 
-rocket.n=2;
+engines.thrust_asl=2250000;
+engines.isp_asl=260;
+engines.isp_vac=280;
+engines.m_dot=600;
 
-rocket.t_ig=0;
-rocket.K=[100,100];
-rocket.K_max=100;
-
-rocket.engines=engines;
-rocket.mass=mass;
-
-rocket.s_phase=[0,0];
+[engines]=EngineCalc(14600000,640,9000,6,25,70,0.95,2,engines);
 
 
-rocket.Deltat_t0=0;
-rocket.deltat=0;
-rocket.Deltat_cutoff=3;
+[engines]=EngineCalc(4700000,35,33500,6,25,60,0.925,3,engines);
 
 
 
-LaunchSiteName='SAZLC';
+%%Stages
+engine=[2,1,0;0,1,0;0,0,1]
+fuel=[FuelB, Fuel1, Fuel2]
+throttle=[1,1,1;1,1,1;1,1,1]
+massvars.percent=[0.08,0.05,0.04]
+massvars.extra=[0,2000,1500]
+payload=Payload
+
+
+stage = StageCreator(engines, engine, fuel, throttle, massvars, payload)
+
+TargetAlt=200000;
+
+LaunchSiteName='Plesetsk';
 launchSite=LaunchSites(LaunchSiteName);
 
-rocket.r_bar=launchSite.r_bar;
-rocket.v_bar=launchSite.v_bar;
+state.r_bar=launchSite.r_bar;
+state.v_bar=launchSite.v_bar;
+state.t=0;
 
-TargetAlt=400000;
 
 
 guidance.DeltaLAN=1.5;
 guidance.oppApsis=TargetAlt;
 guidance.Alt=TargetAlt;
-guidance.Inclination=40;
+guidance.Inclination=90;
 target = LaunchTarget(guidance, launchSite);
+target.t_ig=0;
+target.Deltat_t0=0;
 
 rocket.target=target;
 
 rocket.v_bar_go=target.v_d*unit(cross(-target.i_bar_y,unit(rocket.r_bar)))-rocket.v_bar;
 
+vehicle.stage=stage;
+vehicle.engines=engines;
+vehicle.target=target;
+vehicle.state=state;
 
-#t_b(1)=rocket.mass(1).Fuel/rocket.engines(1).m_dot(100);
-#t_b(2)=rocket.mass(2).Fuel/rocket.engines(2).m_dot(100);
-t_c=0;
-t_b(1)=0
-t_b(2)=0
-
-
-
-clear XtraMass1 XtraMass2 TankP1 TankP2 mass engines launchSite guidance
+clear XtraMass1 XtraMass2 TankP1 TankP2 launchSite guidance

@@ -21,7 +21,7 @@ if nargin == 3
   E=0;
 else
   if pre.Deltat_prime_c==0
-    Deltat_prime_c=Deltat
+    Deltat_prime_c=Deltat;
   else
     Deltat_prime_c=pre.Deltat_prime_c;
   end
