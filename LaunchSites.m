@@ -1,7 +1,9 @@
-function LaunchSite = LaunchSites(Name,plot)
+function LaunchSite = LaunchSites(Name,Input1,Input2,Input3)
+%%Multi Pad Support is intendend but not implemented
 global r_E
 global Background
 global Pe_E
+
 
 switch Name
   case 'SAZLC'
@@ -29,6 +31,57 @@ switch Name
     Lat=5.264636;
     Long=-52.792204;
     Alt=10;
+  case 'Plesetsk'
+    Lat=62.925556;
+    Long=40.577778;
+    Alt=90;
+  case 'Starbase'
+    Lat=25.996;
+    Long=-97.154;
+    Alt=2;
+  case 'Uchinoura'
+    Lat=31.2523;
+    Long=131.0785;
+    Alt=287;
+  case 'Jiuquan'
+    Lat=40.96056;
+    Long=100.29833;
+    Alt=1073;
+  case 'Taiyuan'
+    Lat=38.849086;
+    Long=111.608497;
+    Alt=1455;
+  case 'Xichang'
+    Lat=28.24646;
+    Long=102.02814;
+    Alt=1861;
+  case 'Wenchang'
+    Lat=19.614492;
+    Long=110.951133;
+    Alt=9;
+  case 'Semnan'
+    Lat=35.234631;
+    Long=53.920941;
+    Alt=943;
+%  case ' '
+%    Lat= ;
+%    Long= ;
+%    Alt= ;
+%  case ' '
+%    Lat= ;
+%    Long= ;
+%    Alt= ;
+  case 'Custom'
+   if nargin < 4
+    Input1=0;
+    Input2=0;
+    Input3=0;
+   end
+
+
+    Lat=Input1;
+    Long=Input2;
+    Alt=Input3;
   otherwise
     Lat=0;
     Long=0;
