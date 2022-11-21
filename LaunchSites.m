@@ -27,7 +27,7 @@ switch Name
     Lat=45.965000;
     Long=63.305000;
     Alt=90;
-  case 'Guiana'
+  case 'Kourou'
     Lat=5.264636;
     Long=-52.792204;
     Alt=10;
@@ -63,10 +63,10 @@ switch Name
     Lat=35.234631;
     Long=53.920941;
     Alt=943;
-%  case ' '
-%    Lat= ;
-%    Long= ;
-%    Alt= ;
+  case 'Woomera'
+    Lat=-30.94907;
+    Long=136.53418;
+    Alt=137;
 %  case ' '
 %    Lat= ;
 %    Long= ;

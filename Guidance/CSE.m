@@ -284,8 +284,8 @@ endif
     j=j-1;
     b=y/(1+((j-1)/(j+2))*(1-b));
   end
-end
   Q=(1/(w^2))*(1+((2*(1-b/4))/(3*w*(w+1))));
+  end
 end
 
 %%U_1 Series Summation
