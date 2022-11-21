@@ -3,16 +3,16 @@ function [Engine] = EngineCalc(Pc,q,DAlt,Ratio,ThetaTc,ThrustMin,CorFac, n, Engi
 global AltStep;
 global Rstar;
 global G;
-global AtmoProp;
 
-
+altTest=0:100:100000;
+atmo=AtmoProp(altTest);
 
 Lstar=0.9;       %Chamber Characteristic Length (m) between 0.76 and 1.02
 
 
 
 %Pressure at design altitude
-DPa= AtmoProp(2,round((DAlt/AltStep)+1));
+DPa= AtmoProp(DAlt,1);
 
 
 %Molar Mass of exhaust by pressure for fuel ratio of 5
@@ -69,9 +69,9 @@ Rt = sqrt(At/pi);
 
 Re = sqrt(Ae/pi);
 
-Veff = Ve + (((Pe-AtmoProp(2,:))*Ae)/q);
+Veff = Ve + (((Pe-atmo(1,:))*Ae)/q);
 
-F = q*Ve+(Pe-AtmoProp(2,:))*Ae;
+F = q*Ve+(Pe-atmo(1,:))*Ae;
 
 ind = F <= 0;
 F(ind) = 0;
@@ -131,9 +131,9 @@ TeT(t,:) = Tc(t,:)/(1+((k(t,:)-1)/2)*(MeT(t,:)^2));
 
 VeT(t,:) = sqrt(((2*k(t,:))/(k(t,:)-1))*((Rstar*Tc(t,:))./(MolM(t,:)))*(1-(PeT(t,:)./PcT(t,:)).^((k(t,:)-1)/k(t,:)))); %Velocity at exit
 
-VeffT(t,:) = VeT(t,:) + ((PeT(t,:)-AtmoProp(2,:))*(Ae./qT(t,:)));
+VeffT(t,:) = VeT(t,:) + ((PeT(t,:)-atmo(1,:))*(Ae./qT(t,:)));
 
-FT(t,:) = qT(t,:).*VeT(t,:)+(PeT(t,:)-AtmoProp(2,:))*Ae;
+FT(t,:) = qT(t,:).*VeT(t,:)+(PeT(t,:)-atmo(1,:))*Ae;
 
 IspT(t,:) = VeffT(t,:)/G;
 
@@ -165,14 +165,17 @@ end
 
 if Ffinal(100,13) == 0
 %%Vaccum Engine, use vaccum properties for asl
-Engine.thrust_asl(n)=Ffinal(100,20000);
-Engine.isp_vac(n)=Ispfinal(100,20000);
-Engine.isp_asl(n)=Ispfinal(100,20000);
+Engine.thrust_asl(n)=Ffinal(100,1001);
+Engine.isp_vac(n)=Ispfinal(100,1001);
+Engine.isp_asl(n)=Ispfinal(100,1001);
 else
-Engine.thrust_asl(n)=Ffinal(100,13);
-Engine.isp_vac(n)=Ispfinal(100,20000);
-Engine.isp_asl(n)=Ispfinal(100,13);
+Engine.thrust_asl(n)=Ffinal(100,1);
+Engine.isp_vac(n)=Ispfinal(100,1001);
+Engine.isp_asl(n)=Ispfinal(100,1);
 end
 
+Engine.ae(n)=Ae;
+Engine.ve(n)=VeT(100);
+Engine.pe(n)=PeT(100);
 Engine.m_dot(n)=qfinal(100);
 endfunction

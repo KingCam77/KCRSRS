@@ -5,7 +5,7 @@ NumbB=2;
 DiaB=1;
 ThrustB=2250000;
 qB=600;
-FuelB=66000;
+FuelB=80000;
 
 %%Vehicle Mass
 
@@ -42,8 +42,8 @@ DiaM=5;
 %%%Calculations
 
 Settings.TankWallThickness=0.1;
-Settings.TankRatio=0.5
-tanks = FuelCalc([Fuel1,Fuel2], [6,6], 'LOX/LH2', DiaM, Settings)
+Settings.TankRatio=0.5;
+tanks = FuelCalc([Fuel1,Fuel2], [6,6], 'LOX/LH2', DiaM, Settings);
 
 %%Create Engines
 
@@ -51,7 +51,9 @@ tanks = FuelCalc([Fuel1,Fuel2], [6,6], 'LOX/LH2', DiaM, Settings)
 engines.thrust_asl=2250000;
 engines.isp_asl=260;
 engines.isp_vac=280;
-engines.m_dot=600;
+engines.m_dot=882;
+engines.ve=2549;
+
 
 [engines]=EngineCalc(14600000,640,9000,6,25,70,0.95,2,engines);
 
@@ -61,41 +63,45 @@ engines.m_dot=600;
 
 
 %%Stages
-engine=[2,1,0;0,1,0;0,0,1]
-fuel=[FuelB, Fuel1, Fuel2]
-throttle=[1,1,1;1,1,1;1,1,1]
-massvars.percent=[0.08,0.05,0.04]
-massvars.extra=[0,2000,1500]
-payload=Payload
+engine=[2,1,0;0,1,0;0,0,1];
+fuel=[FuelB, Fuel1, Fuel2];
+throttle=[1,1,1;1,1,1;1,1,1];
+massvars.percent=[0.08,0.05,0.04];
+massvars.extra=[0,2000,1500];
+payload=Payload;
 
 
-stage = StageCreator(engines, engine, fuel, throttle, massvars, payload)
+vehicle = StageCreator(engines, engine, fuel, throttle, massvars, payload, [10, 10; 10, 10]);
 
-TargetAlt=200000;
+vehicle.stage(1).area=VehicleTools('Area', 5, 2, 1.5);
+vehicle.stage(2).area=VehicleTools('Area', 5);
+vehicle.stage(3).area=VehicleTools('Area', 5);
 
-LaunchSiteName='Plesetsk';
+
+TargetAlt=300000;
+
+LaunchSiteName='SAZLC';
 launchSite=LaunchSites(LaunchSiteName);
 
 state.r_bar=launchSite.r_bar;
 state.v_bar=launchSite.v_bar;
 state.t=0;
 
+#timing.stage_spacing=[10,
+
 
 
 guidance.DeltaLAN=1.5;
 guidance.oppApsis=TargetAlt;
 guidance.Alt=TargetAlt;
-guidance.Inclination=90;
+guidance.Inclination=40;
 target = LaunchTarget(guidance, launchSite);
 target.t_ig=0;
 target.Deltat_t0=0;
 
-rocket.target=target;
 
-rocket.v_bar_go=target.v_d*unit(cross(-target.i_bar_y,unit(rocket.r_bar)))-rocket.v_bar;
+state.v_bar_go=target.v_d*unit(cross(-target.i_bar_y,unit(state.r_bar)))-state.v_bar;
 
-vehicle.stage=stage;
-vehicle.engines=engines;
 vehicle.target=target;
 vehicle.state=state;
 

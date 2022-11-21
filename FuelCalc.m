@@ -3,8 +3,8 @@ function tank = FuelCalc(fuel, ratio, fueltype, DiaM, Settings)
 
 switch fueltype
   case 'LOX/LH2'
-    OxDensity = MaterialLookup('LOX')
-    FuelDensity = MaterialLookup('LH2')
+    OxDensity = MaterialLookup('LOX');
+    FuelDensity = MaterialLookup('LH2');
 end
 
 if nargin < 5
@@ -23,14 +23,14 @@ FuelVol=FuelAmount./FuelDensity;
 
 TankR=DiaM/2-TankWallThickness;
 
-n=length(fuel)
+n=length(fuel);
 
 tank(1).shape=0;
 i=1;
 for i=1:n
 
-tank = TankCalc(OxVol(i), TankR, TankRatio, 2*i-1, tank, 'Ox Tank')
-tank = TankCalc(FuelVol(i), TankR, TankRatio, 2*i, tank, 'Fuel Tank')
+tank = TankCalc(OxVol(i), TankR, TankRatio, 2*i-1, tank, 'Ox Tank');
+tank = TankCalc(FuelVol(i), TankR, TankRatio, 2*i, tank, 'Fuel Tank');
 
 end
 end
@@ -50,7 +50,7 @@ function tank = TankCalc(volume, radius, ratio, n, tank, name)
   tank(n).radius=radius;
   tank(n).length=length;
   tank(n).volume=volume;
-  tank(n).stage=ceil(n/2)
+  tank(n).stage=ceil(n/2);
   tank(n).name=name;
 end
 

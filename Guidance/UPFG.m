@@ -1,18 +1,24 @@
 %%UPFGsingle
-function [current, guidance] = UPFG(vehicle, previous)
+function [current, guidance] = UPFG(vehicle, target, state, previous)
 global mu_E
 epsilon_cone=0.00001;
 epsilon_vgo=0.00001;
 
-s_pre=1;
 
-#pre=previous.pre;
+pre=UPFG_internal.pre;
+
+s_pre=UPFG_internal.s_pre;
 
 stage=vehicle.stage;
 engines=vehicle.engines;
-state=vehicle.state;
-target=vehicle.target;
 n=length(stage);
+
+r_bar=state.r_bar;
+v_bar=state.v_bar;
+t=state.t;
+m=state.m;
+
+
 
 skip=0;
 s_pre;
@@ -30,12 +36,6 @@ if s_pre > 0
     t_b(i)=stage(i).time;
     i=i+1;
     end
-
-    pre.Deltat_prime_c=0;
-    pre.x_prime_c=0;
-    pre.A=0;
-    pre.D=0;
-    pre.E=0;
 
     r_d=target.r_d;
     v_d=target.v_d;
@@ -63,11 +63,11 @@ if s_pre > 0
     r_bar_bias=[0,0,0];
     r_bar_ref=r_bar_d;
     v_bar_ref=v_bar_d;
-    t_go=1;
+    t_go=0;
     r_bar_grav=-(mu_E/2)*r_bar/norm(r_bar)^3;
-    t_go0=1;
+    t_go0=0;
     rho=0.0;
-    v_bar_go=v_bar_d-v_bar;
+    v_bar_go=state.v_bar_go;
     t_c=0;
     s_mode=1;
 
@@ -113,9 +113,9 @@ else
 
     #[r_bar, v_bar, g_bar] = PowFNav(r_bar, v_bar, Deltat, Deltav_bar_sensed, g_bar);
 
-    r_bar=Pr_bar;
-    v_bar=Pv_bar;
-    g_bar=Pg_bar;
+    #r_bar=Pr_bar;
+    #v_bar=Pv_bar;
+    #g_bar=Pg_bar;
 
     if t > t_ig
 

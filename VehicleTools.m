@@ -1,4 +1,4 @@
-function Output = VehicleTools(Mode, Input1, Input2, Input3)
+function Output = VehicleTools(Mode, Input1, Input2, Input3, Input4)
 
   switch Mode
     case 'Area'
@@ -29,13 +29,19 @@ function Output = VehicleTools(Mode, Input1, Input2, Input3)
       mass=Input1;
       stage=Input2;
       engines=Input3;
+      lateSRBsep=Input4;
 
       engines_core=stage.engines;
       engines_core(1)=0;
 
       m_dot_core=sum(engines_core .* stage.throttle .* engines.m_dot);
 
-      mass=mass.total-mass.boosters-m_dot_core*stage.time;
+    switch lateSRBsep
+      case 'true'
+        mass=mass.total-mass.fuel-m_dot_core*stage.time;
+      case 'false'
+        mass=mass.total-mass.boosters-m_dot_core*stage.time;
+    end
 
       Output=mass;
   endswitch
