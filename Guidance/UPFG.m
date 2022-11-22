@@ -1,5 +1,5 @@
 %%UPFGsingle
-function [current, guidance] = UPFG(vehicle, target, state, previous)
+function [current, guidance] = UPFG(vehicle, target, state, previous, stagenumb)
 global mu_E
 epsilon_cone=0.00001;
 epsilon_vgo=0.00001;
@@ -9,7 +9,8 @@ pre=UPFG_internal.pre;
 
 s_pre=UPFG_internal.s_pre;
 
-stage=vehicle.stage;
+n=length(stage);
+stage=vehicle.stage(stagenum:n);
 engines=vehicle.engines;
 n=length(stage);
 

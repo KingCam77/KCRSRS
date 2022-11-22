@@ -5,18 +5,18 @@ NumbB=2;
 DiaB=1;
 ThrustB=2250000;
 qB=600;
-FuelB=80000;
+FuelB=70000;
 
 %%Vehicle Mass
 
 %%Fuel Input
 %First Stage Fuel (kg)
-Fuel1=220000;
+Fuel1=200000;
 %Second Stage Fuel (kg)
-Fuel2=20000;
+Fuel2=1000;
 
 %Payload Mass (kg)
-Payload=100;
+Payload=10000;
 
 %%Extra Mass Parameters
 %%Mass fraction of fuel that the tank weights
@@ -94,7 +94,7 @@ state.t=0;
 guidance.DeltaLAN=1.5;
 guidance.oppApsis=TargetAlt;
 guidance.Alt=TargetAlt;
-guidance.Inclination=40;
+guidance.Inclination=145;
 target = LaunchTarget(guidance, launchSite);
 target.t_ig=0;
 target.Deltat_t0=0;

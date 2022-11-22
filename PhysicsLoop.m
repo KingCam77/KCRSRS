@@ -7,7 +7,7 @@ TokpelaInitializer;
 
 
 dt=1
-TimeEval=1000;
+TimeEval=4000;
 ENG=1;
 
 v_bar=vehicle.state.v_bar;
@@ -59,7 +59,7 @@ elseif guidance.type == 2
 
   UPFG_internal.s_pre=1;
 
-  UPFG(vehicle, target, UFPG_state, UPFG_internal)
+  UPFG(vehicle, target, UFPG_state, UPFG_internal, stage)
 
 elseif guidance.type == 3
 accel=0;
@@ -139,7 +139,7 @@ g_bar=unit(r_bar)*(-mu_E/(norm(r_bar)^2));
 mach = norm(v_bar)/AtmoProp(alt,3);
 Dy_p = 0.5*AtmoProp(alt,2)*norm(v_bar)^2;
 drag = (CdBasic(mach)*area*Dy_p)/mass;
-drag = drag*unit(v_bar_surf);
+drag = drag*-unit(v_bar_surf);
 
 %Thrust acceleration
 Thrust_bar=(thrust*unit(guide_bar))/mass;

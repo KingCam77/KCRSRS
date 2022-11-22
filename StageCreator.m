@@ -61,17 +61,20 @@ stage(i).engines=engine(i,:);
 stage(i).throttle=throttle(i,:);
 stage(i).m_dot=sum(stage(i).engines .* stage(i).throttle .* engines.m_dot);
 
+%%Guidance mode manager
+if i==1
+stage(i).guidance_mode = 1;
+else
+stage(i).guidance_mode = 2;
+end
 
 
 if i==1 && SRB==1
 stage(i).time=VehicleTools('MaxBurn', fuel(1), engines.m_dot(1));
 stage(i).mass=mass(1).total;
-
-
 elseif i==2 && SRB==1
 stage(i).time=VehicleTools('MaxBurn', fuel(2), stage(2).m_dot)-stage(1).time;
 stage(i).mass=VehicleTools('Mass', mass(1), stage(1), engines, lateSRBsep);
-
 else
 stage(i).time=VehicleTools('MaxBurn', fuel(i), stage(i).m_dot);
 stage(i).mass=mass(i).total;

@@ -11,8 +11,12 @@ lat=LaunchSite.Lat;
 long=LaunchSite.Long;
 r_bar=LaunchSite.r_bar;
 
-
+if inc > lat && lat < 180-inc
 Beta_inertial = asind(cosd(inc)/cosd(lat));
+else
+inc=0;
+Beta_inertial = asind(cosd(inc)/cosd(lat));
+end
 
 v_orbit=sqrt(mu_E/alt)
 v_rotate=(2*pi*r_E/Pe_E)*cosd(lat);
