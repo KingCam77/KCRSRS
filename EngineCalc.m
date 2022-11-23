@@ -1,4 +1,4 @@
-function [Engine] = EngineCalc(Pc,q,DAlt,Ratio,ThetaTc,ThrustMin,CorFac, n, Engine)
+function [Engine] = EngineCalc(Pc,q,DAlt,Ratio,ThetaTc,ThrustMin,CorFac, Engine)
 %%engine calculator
 global AltStep;
 global Rstar;
@@ -161,6 +161,8 @@ Ispfinal=CorFac.*IspT;
 
 if nargin == 7
   n=1;
+else
+  n=length(Engine.thrust_asl)+1;
 end
 
 if Ffinal(100,13) == 0

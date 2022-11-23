@@ -1,46 +1,69 @@
 %Stage Creator
-function vehicle = StageCreator(engines, engine, fuel, throttle, massvars, payload, timing, lateSRBsep)
+function vehicle = StageCreator(engines, boosters, booster, enginevars, massvars, payload, timing, lateSRBsep)
   %%example engine matrix [2, 1, 0; 0, 1, 0; 0, 0, 1]
-  %%example fuel matrix [40000, 3000, 30000]
-      %In order of stages [boosters, core, second, next, so on]
-      %Does not support multiple SRB stages, only initial stage
-      %If no boosters, leave first spot as zero, program will understand.
+  %%example fuel matrix [40000, 30000, 20000]
+      %In order of stages [core, second, next, so on]
+      %Booster Fuel is handled in engine structure
   %%Throttle matix is optional (not yet)
   %%timings is a matrix stage-1 long and two tall
       %Top row is the time between engine cutoff and seperation
       %Bottom row is the time between seperation and engine ignition
 
 
+  %%This function is a mess to read, I cant wait to have fun later
+      %Better handling of the boosters could done, mainly with the input matrix.
+
+
+
+
+
 extra=massvars.extra;
 percent=massvars.percent;
+engine=enginevars.engine;
+fuel=enginevars.fuel;
+throttle=enginevars.throttle;
 
-if fuel(1) > 0
-  SRB=1;
-  vehicle.SRB=1;
-  n=length(fuel);
-  m=length(fuel)+1;
-else
-  SRB=0;
-  vehicle.SRB=0;
-  n=length(fuel)-1;
-  m=length(fuel);
-  fuel=fuel(2:m);
-end
 
 if nargin < 8
   lateSRBsep='false';
 end
 
 
-%initial mass
 
-mass(m).fuel=0;
-mass(m).extra=0;
-mass(m).tankWeight=0;
-mass(m).payload=payload;
-mass(m).total=payload;
+%%Extra booster stages
+[booster_stage, booster_count] = size(booster);
 
-i=m-1;
+booster_present = booster > 0;
+
+for n=1:booster_stage
+  for i=1:booster_count
+    t_burn(n,i) = boosters(i).t_burn*booster_present(n,i);
+  end
+  if ismember(0, unique(t_burn(n,:)))
+    extra_stages(n,:) = length(unique(t_burn(n,:)))-1;
+  else
+    extra_stages(n,:) = length(unique(t_burn(n,:)));
+  end
+end
+
+
+
+
+
+
+%%Core Stage Properties
+
+  %%Core stage mass calculator, supports details for some reason
+[n, l] = size(engine)
+
+last=n+1
+mass(last).fuel=0;
+mass(last).extra=0;
+mass(last).tankWeight=0;
+mass(last).payload=payload;
+mass(last).total=payload;
+
+i=n;
 while i > 0
 mass(i).fuel=fuel(i);
 mass(i).extra=extra(i);
@@ -50,65 +73,193 @@ mass(i).total=mass(i).fuel+mass(i).extra+mass(i).tankWeight+mass(i).payload;
 --i;
 end
 
-if SRB == 1
-  mass(1).boosters=mass(1).total-mass(2).total;
-end
 
 
-i=1;
+[booster_stages, booster_types] = size(booster)
+
+[test, offset] = unique(booster, 'rows', 'stable');
+
+%%Something here breaks with different booster arrays, possibly related to offset = 0
+
+##if offset == 0
+##  offset = zeros(booster_stages, 1);
+##end
+
+offset=offset-1
+
+%%Sketchy code to create engine phases for booster sections
+inc_offset=1;
 for i=1:n
-stage(i).engines=engine(i,:);
-stage(i).throttle=throttle(i,:);
-stage(i).m_dot=sum(stage(i).engines .* stage(i).throttle .* engines.m_dot);
+  inc=1;
+while inc <= extra_stages(i)+1
 
-%%Guidance mode manager
-if i==1
-stage(i).guidance_mode = 1;
+val_write=(inc):(booster_types-offset(i));
+
+engine_new(inc_offset, :)=engine(i, :);
+actual_stage(inc_offset)=i;
+
+booster_new(inc_offset, val_write)=booster(i, val_write);
+
+inc_offset=inc_offset+1;
+inc=inc+1;
+end
+end
+
+booster_exist = booster_new > 0
+
+
+
+m_store=0;
+[~, act_stage_index] = unique(actual_stage)
+
+for i=1:length(actual_stage)
+m = actual_stage(i);
+n = act_stage_index(m);
+
+if m == m_store(i)
+
+
+  stage(i).engines=engine(m,:);
+  stage(i).throttle=throttle(m,:);
+  stage(i).m_dot=sum(stage(n).engines .* stage(n).throttle .* engines(1).m_dot);
+  stage(i).guidance_mode = 2;
+
+  stage(i).time=stage(n).time;
+  stage(i).mass=stage(n).mass;
+
+  #stage(i).area=VehicleTools('Area', DiaM, DiaB, NumbB);
+  stage(i).s_phase=0;
+
+
 else
-stage(i).guidance_mode = 2;
-end
 
+if i == 1
+  stage(i).engines=engine(m,:);
+  stage(i).throttle=throttle(m,:);
+  stage(i).m_dot=sum(stage(n).engines .* stage(n).throttle .* engines(1).m_dot);
+  stage(i).guidance_mode = 1;
 
-if i==1 && SRB==1
-stage(i).time=VehicleTools('MaxBurn', fuel(1), engines.m_dot(1));
-stage(i).mass=mass(1).total;
-elseif i==2 && SRB==1
-stage(i).time=VehicleTools('MaxBurn', fuel(2), stage(2).m_dot)-stage(1).time;
-stage(i).mass=VehicleTools('Mass', mass(1), stage(1), engines, lateSRBsep);
+  stage(i).time=VehicleTools('MaxBurn', fuel(m), stage(i).m_dot);
+  stage(i).mass=mass(m).total;
+
+  #stage(i).area=VehicleTools('Area', DiaM, DiaB, NumbB);
+  stage(i).s_phase=0;
 else
-stage(i).time=VehicleTools('MaxBurn', fuel(i), stage(i).m_dot);
-stage(i).mass=mass(i).total;
+
+  stage(i).engines=engine(m,:);
+  stage(i).throttle=throttle(m,:);
+  stage(i).m_dot=sum(stage(n).engines .* stage(n).throttle .* engines(1).m_dot);
+  stage(i).guidance_mode = 2;
+
+  stage(i).time=VehicleTools('MaxBurn', fuel(m), stage(i).m_dot);
+  stage(i).mass=mass(m).total;
+
+  #stage(i).area=VehicleTools('Area', DiaM, DiaB, NumbB);
+  stage(i).s_phase=0;
 end
 
-#stage(i).area=VehicleTools('Area', DiaM, DiaB, NumbB);
-stage(i).s_phase=0;
 end
 
-vehicle.stage=stage
-
-%%Moving here because it makes sense
-vehicle.state.m=stage(1).mass;
-
-
-%%Stage Seperation timings
-i=1;
-for i=1:n
-if (SRB == 1 && i == 1)
-sepDelay(i) = stage(i).time;
-ignDelay(i) = stage(i).time;
-elseif (SRB == 0 && i == 1)
-sepDelay(i) = stage(i).time + timing(1,i);
-ignDelay(i) = sepDelay(i) + timing(2,i);
-elseif i == n
-sepDelay(i) = ignDelay(i-1)+stage(i).time;
-ignDelay(i) = sepDelay(i);
-else
-sepDelay(i) = ignDelay(i-1)+stage(i).time + timing(1,i);
-ignDelay(i) = sepDelay(i) + timing(2,i);
-end
+m_store(i+1) = m;
 end
 
-vehicle.timings=[sepDelay; ignDelay]
+time_last=0;
+time_sum=0;
+for i=1:length(actual_stage)
+m = actual_stage(i)
+n = act_stage_index(m)
+
+time=0;
+m_dot=0;
+massB=0;
+for b=1:booster_types
+  m_dot(b)=booster_new(i,b)*boosters(b).m_dot;
+
+  time(b)=boosters(b).t_burn*booster_exist(i,b);
+  if time(b) == 0
+    time(b) = inf;
+  endif
+
+  massB=massB+booster_new(i,b)*boosters(b).mass;
+end
+
+%%Time stuff
+  time = min(time);
+  if time == inf
+    time = 0;
+  end
+  if i == n+extra_stages(m)
+    stage(i).time=stage(n+extra_stages(m)).time-time_sum;
+    time_sum=0;
+    time_last=0;
+  else
+    stage(i).time=time-time_sum;
+  end
+
+  m_dot_total=sum(m_dot);
+  stage(i).m_dot_total=stage(i).m_dot+m_dot_total;
+
+  if i == n
+    FuelBurn=0;
+    FuelBurn_core=0;
+  elseif i == n+extra_stages(m)
+    FuelBurn_core=FuelBurn_core+stage(i).m_dot*stage(i-1).time
+    FuelBurn=FuelBurn_core
+  else
+    sum(m_dot*stage(i-1).time)
+    FuelBurn_core=FuelBurn_core+stage(i).m_dot*stage(i-1).time
+    FuelBurn=FuelBurn+stage(i).m_dot*stage(i-1).time+sum(m_dot*stage(i-1).time);
+  endif
+
+  stage(i).mass=stage(i).mass+massB-FuelBurn;
+
+  time_sum=time+time_last;
+  time_last=time;
+end
+
+  #stage(i).time=stage(n).m_dot
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+vehicle.stage=stage;
+
+##
+##%%Moving here because it makes sense
+##vehicle.state.m=stage(1).mass;
+##
+##
+##%%Stage Seperation timings
+##i=1;
+##for i=1:n
+##if i == 1
+##sepDelay(i) = stage(i).time + timing(1,i);
+##ignDelay(i) = sepDelay(i) + timing(2,i);
+##elseif i == n
+##sepDelay(i) = ignDelay(i-1)+stage(i).time;
+##ignDelay(i) = sepDelay(i);
+##else
+##sepDelay(i) = ignDelay(i-1)+stage(i).time + timing(1,i);
+##ignDelay(i) = sepDelay(i) + timing(2,i);
+##end
+##end
+##
+##vehicle.timings=[sepDelay; ignDelay];
 
 vehicle.engines=engines;
 vehicle.curStage=1;

@@ -13,7 +13,7 @@ FuelB=70000;
 %First Stage Fuel (kg)
 Fuel1=200000;
 %Second Stage Fuel (kg)
-Fuel2=1000;
+Fuel2=16000;
 
 %Payload Mass (kg)
 Payload=10000;
@@ -48,34 +48,56 @@ tanks = FuelCalc([Fuel1,Fuel2], [6,6], 'LOX/LH2', DiaM, Settings);
 %%Create Engines
 
 
-engines.thrust_asl=2250000;
-engines.isp_asl=260;
-engines.isp_vac=280;
-engines.m_dot=882;
-engines.ve=2549;
+%%Define main engines first
+[engines]=EngineCalc(14600000,640,9000,6,25,70,0.95);
+[engines]=EngineCalc(4700000,35,33500,6,25,60,0.925,engines);
 
+%%Define booster engines after, seperately
 
-[engines]=EngineCalc(14600000,640,9000,6,25,70,0.95,2,engines);
+%%IMPORTANT
+%The fuel needs to be in ascending order so the first booster in the list is the
+%shortest burning
 
+%If i can scrape together enough brain cells, i will remove this requirement.
 
-[engines]=EngineCalc(4700000,35,33500,6,25,60,0.925,3,engines);
+engines(2).thrust_asl=2250000;
+engines(2).isp_asl=260;
+engines(2).isp_vac=280;
+engines(2).m_dot=882;
+engines(2).ve=2549;
 
+enginevars.engine = [1;
+                     1];
+enginevars.throttle = [1;
+                       1];
+enginevars.fuel = [30000, 70000];
 
+massvars.percent=[0.05,0.08];
+massvars.extra=[200,100];
+
+boosters = BoosterCreator(engines(2), enginevars, massvars);
 
 %%Stages
-engine=[2,1,0;0,1,0;0,0,1];
-fuel=[FuelB, Fuel1, Fuel2];
-throttle=[1,1,1;1,1,1;1,1,1];
+
+booster = [0, 2;
+           0, 0];
+
+enginevars.engine = [1, 0;
+                     0, 1];
+enginevars.throttle = [1, 1;
+                       1, 1];
+enginevars.fuel = [Fuel1, Fuel2];
+
 massvars.percent=[0.08,0.05,0.04];
 massvars.extra=[0,2000,1500];
 payload=Payload;
 
 
-vehicle = StageCreator(engines, engine, fuel, throttle, massvars, payload, [10, 10; 10, 10]);
+vehicle = StageCreator(engines, boosters, booster, enginevars, massvars, payload, [10, 10; 10, 10]);
 
-vehicle.stage(1).area=VehicleTools('Area', 5, 2, 1.5);
-vehicle.stage(2).area=VehicleTools('Area', 5);
-vehicle.stage(3).area=VehicleTools('Area', 5);
+#vehicle.stage(1).area=VehicleTools('Area', 5, 2, 1.5);
+#vehicle.stage(2).area=VehicleTools('Area', 5);
+#vehicle.stage(3).area=VehicleTools('Area', 5);
 
 
 TargetAlt=300000;
